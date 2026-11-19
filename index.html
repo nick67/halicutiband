@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Λίστα αρχείων HTML</title>
+<style>
+  :root{
+    --bg:#0f1420; --card:#171e2e; --line:#26304a; --text:#e6eaf5; --mute:#8b95b0; --acc:#5aa9ff;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f4f6fb; --card:#fff; --line:#dde3f0; --text:#1b2236; --mute:#667090; --acc:#1f6feb; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+  h1{margin:0 0 4px;font-size:1.6rem}
+  .sub{color:var(--mute);margin:0 0 20px;font-size:.95rem}
+  .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  input,select{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit}
+  input{flex:1;min-width:200px}
+  input:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
+  .folder{margin:22px 0 8px;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+  ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  li a{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;background:var(--card);
+       border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+  li a:hover{border-color:var(--acc);transform:translateY(-1px)}
+  .name{display:flex;flex-direction:column;min-width:0}
+  .title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file{color:var(--mute);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .size{color:var(--mute);font-size:.82rem;white-space:nowrap}
+  .msg{padding:24px;text-align:center;color:var(--mute);background:var(--card);border:1px dashed var(--line);border-radius:10px}
+  .count{color:var(--mute);font-size:.85rem;margin-top:18px;text-align:right}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="heading">Αρχεία HTML</h1>
+  <p class="sub" id="sub">Φόρτωση λίστας…</p>
+
+  <div class="tools">
+    <input id="q" type="search" placeholder="Αναζήτηση…" autocomplete="off" aria-label="Αναζήτηση">
+    <select id="sort" aria-label="Ταξινόμηση">
+      <option value="name">Ταξινόμηση: Όνομα</option>
+      <option value="size">Ταξινόμηση: Μέγεθος</option>
+    </select>
+  </div>
+
+  <div id="list"></div>
+  <div class="count" id="count"></div>
+</div>
+
+<script>
+/* ---------- Ρυθμίσεις ----------
+   Αν η σελίδα φιλοξενείται στο GitHub Pages (username.github.io/repo/),
+   το owner και το repo βρίσκονται αυτόματα. Συμπλήρωσέ τα μόνο για δοκιμή τοπικά
+   ή αν χρησιμοποιείς δικό σου domain. */
+const CONFIG = { owner: "", repo: "", exclude: ["index.html", "404.html"] };
+
+function detectRepo(){
+  if (CONFIG.owner && CONFIG.repo) return { owner: CONFIG.owner, repo: CONFIG.repo };
+  const host = location.hostname;
+  if (host.endsWith(".github.io")) {
+    const owner = host.split(".")[0];
+    const first = location.pathname.split("/").filter(Boolean)[0];
+    // user site (username.github.io) -> repo = username.github.io
+    const repo = first && !first.includes(".") ? first : owner + ".github.io";
+    return { owner, repo };
+  }
+  return null;
+}
+
+const $ = id => document.getElementById(id);
+let items = [];
+
+function fmtSize(b){
+  if (b < 1024) return b + " B";
+  if (b < 1048576) return (b/1024).toFixed(1) + " KB";
+  return (b/1048576).toFixed(1) + " MB";
+}
+function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function prettify(p){ return p.split("/").pop().replace(/\.html?$/i,"").replace(/[_-]+/g," "); }
+
+async function load(){
+  const info = detectRepo();
+  if (!info) {
+    $("list").innerHTML = '<div class="msg">Η σελίδα δεν τρέχει στο GitHub Pages. Συμπλήρωσε τα <code>owner</code> και <code>repo</code> στο CONFIG του αρχείου.</div>';
+    $("sub").textContent = "";
+    return;
+  }
+  const key = "filelist:" + info.owner + "/" + info.repo;
+  try {
+    let data = null;
+    try {
+      const c = JSON.parse(sessionStorage.getItem(key) || "null");
+      if (c && Date.now() - c.t < 5*60*1000) data = c.d;
+    } catch(e){}
+    if (!data) {
+      const r = await fetch(`https://api.github.com/repos/${info.owner}/${info.repo}/git/trees/HEAD?recursive=1`,
+                            { headers: { "Accept": "application/vnd.github+json" } });
+      if (!r.ok) throw new Error(r.status === 403 ? "Έχει συμπληρωθεί το όριο αιτημάτων του GitHub. Δοκίμασε ξανά σε λίγο." : "Σφάλμα GitHub (" + r.status + ")");
+      data = await r.json();
+      try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch(e){}
+    }
+    items = (data.tree || [])
+      .filter(f => f.type === "blob" && /\.html?$/i.test(f.path))
+      .filter(f => !CONFIG.exclude.includes(f.path))
+      .filter(f => !f.path.split("/").some(seg => seg.startsWith(".")))
+      .map(f => ({ path: f.path, size: f.size || 0, title: prettify(f.path) }));
+
+    $("heading").textContent = info.repo.replace(/[-_]+/g, " ");
+    $("sub").textContent = "Επίλεξε ένα αρχείο για να το ανοίξεις.";
+    render();
+    loadTitles();
+  } catch (e) {
+    $("sub").textContent = "";
+    $("list").innerHTML = '<div class="msg">' + esc(e.message || "Δεν ήταν δυνατή η φόρτωση της λίστας.") + '</div>';
+  }
+}
+
+/* Διαβάζει το <title> κάθε αρχείου (ίδιο origin, δεν μετρά στο όριο του API) */
+async function loadTitles(){
+  await Promise.all(items.map(async it => {
+    try {
+      const r = await fetch(encodeURI(it.path));
+      if (!r.ok) return;
+      const t = (await r.text()).match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      if (t && t[1].trim()) { it.title = t[1].trim().replace(/\s+/g," "); }
+    } catch(e){}
+  }));
+  render();
+}
+
+function render(){
+  const q = $("q").value.trim().toLowerCase();
+  const sort = $("sort").value;
+  let rows = items.filter(i => !q || i.title.toLowerCase().includes(q) || i.path.toLowerCase().includes(q));
+  rows.sort((a,b) => sort === "size" ? b.size - a.size : a.title.localeCompare(b.title, "el"));
+
+  if (!rows.length) {
+    $("list").innerHTML = '<div class="msg">' + (items.length ? "Δεν βρέθηκαν αποτελέσματα." : "Δεν υπάρχουν ακόμα αρχεία HTML.") + '</div>';
+    $("count").textContent = "";
+    return;
+  }
+  const groups = {};
+  rows.forEach(r => {
+    const i = r.path.lastIndexOf("/");
+    (groups[i < 0 ? "" : r.path.slice(0, i)] ||= []).push(r);
+  });
+  const names = Object.keys(groups).sort((a,b) => a.localeCompare(b, "el"));
+  $("list").innerHTML = names.map(g =>
+    (g ? '<div class="folder">' + esc(g) + '</div>' : (names.length > 1 ? '<div class="folder">Κύριος φάκελος</div>' : '')) +
+    '<ul>' + groups[g].map(r =>
+      '<li><a href="' + esc(encodeURI(r.path)) + '"><span class="name"><span class="title">' + esc(r.title) +
+      '</span><span class="file">' + esc(r.path.split("/").pop()) + '</span></span><span class="size">' + fmtSize(r.size) + '</span></a></li>'
+    ).join("") + '</ul>'
+  ).join("");
+  $("count").textContent = rows.length + (rows.length === 1 ? " αρχείο" : " αρχεία");
+}
+
+$("q").addEventListener("input", render);
+$("sort").addEventListener("change", render);
+load();
+</script>
+</body>
+</html>
