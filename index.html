@@ -1,166 +1,309 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Λίστα αρχείων HTML</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Μια συλλογή διαδραστικών εφαρμογών">
+<title>Οι Εφαρμογές μου</title>
 <style>
-  :root{
-    --bg:#0f1420; --card:#171e2e; --line:#26304a; --text:#e6eaf5; --mute:#8b95b0; --acc:#5aa9ff;
-  }
-  @media (prefers-color-scheme: light){
-    :root{ --bg:#f4f6fb; --card:#fff; --line:#dde3f0; --text:#1b2236; --mute:#667090; --acc:#1f6feb; }
-  }
-  *{box-sizing:border-box}
-  body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text)}
-  .wrap{max-width:860px;margin:0 auto;padding:32px 16px 64px}
-  h1{margin:0 0 4px;font-size:1.6rem}
-  .sub{color:var(--mute);margin:0 0 20px;font-size:.95rem}
-  .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-  input,select{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:inherit}
-  input{flex:1;min-width:200px}
-  input:focus,select:focus{outline:2px solid var(--acc);outline-offset:1px}
-  .folder{margin:22px 0 8px;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
-  ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
-  li a{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;background:var(--card);
-       border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
-  li a:hover{border-color:var(--acc);transform:translateY(-1px)}
-  .name{display:flex;flex-direction:column;min-width:0}
-  .title{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .file{color:var(--mute);font-size:.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .size{color:var(--mute);font-size:.82rem;white-space:nowrap}
-  .msg{padding:24px;text-align:center;color:var(--mute);background:var(--card);border:1px dashed var(--line);border-radius:10px}
-  .count{color:var(--mute);font-size:.85rem;margin-top:18px;text-align:right}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+:root {
+  --φόντο: #FAFAFA;
+  --καρτέλα: #FFFFFF;
+  --accent: #2D7DD2;
+  --σύνδεσμος: #1F67B5;
+  --κείμενο: #1A1A1A;
+  --δευτερεύον: #555555;
+  --hover: #F0F7FF;
+  --περίγραμμα: #E8E8E8;
+  --μετάβαση: 200ms;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--φόντο);
+  color: var(--κείμενο);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+.περιέκτης {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.οπτικά-κρυφό {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Header ---------- */
+.κεφαλίδα {
+  position: relative;
+  text-align: center;
+  padding: 3rem 0 2rem;
+}
+.κεφαλίδα h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+.υπότιτλος {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--δευτερεύον);
+  margin: 0.5rem 0 0;
+}
+.github-σύνδεσμος {
+  position: absolute;
+  top: 1rem;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--δευτερεύον);
+  text-decoration: none;
+  border: 1px solid var(--περίγραμμα);
+  border-radius: 999px;
+  background: var(--καρτέλα);
+  transition: color var(--μετάβαση) ease, border-color var(--μετάβαση) ease;
+}
+.github-σύνδεσμος:hover { color: var(--σύνδεσμος); border-color: var(--accent); }
+.github-σύνδεσμος svg { width: 14px; height: 14px; }
+
+/* ---------- Αναζήτηση ---------- */
+.αναζήτηση-περιέκτης {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+#αναζήτηση {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.6rem 1rem;
+  font: inherit;
+  color: var(--κείμενο);
+  background: var(--καρτέλα);
+  border: 1.5px solid #DDDDDD;
+  border-radius: 8px;
+  transition: border-color var(--μετάβαση) ease, box-shadow var(--μετάβαση) ease;
+}
+#αναζήτηση::placeholder { color: #767676; opacity: 1; }
+#αναζήτηση:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(45,125,210,0.15);
+}
+
+/* ---------- Grid καρτελών ---------- */
+.πλέγμα {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+}
+@media (min-width: 768px) {
+  .πλέγμα { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) {
+  .πλέγμα { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.καρτέλα {
+  display: flex;
+  min-height: 160px;
+  background: var(--καρτέλα);
+  border: 1px solid var(--περίγραμμα);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition:
+    transform var(--μετάβαση) ease,
+    box-shadow var(--μετάβαση) ease,
+    background-color var(--μετάβαση) ease;
+}
+.καρτέλα > .περιεχόμενο-καρτέλας {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  padding: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: inherit;
+}
+.καρτέλα:not(.απενεργοποιημένη):hover,
+.καρτέλα:not(.απενεργοποιημένη):focus-within {
+  transform: translateY(-4px);
+  background-color: var(--hover);
+  /* Η μπλε γραμμή αριστερά ως inset σκιά, ώστε να μη μετακινείται το περιεχόμενο. */
+  box-shadow: inset 3px 0 0 var(--accent), 0 8px 20px rgba(0,0,0,0.10);
+}
+a.περιεχόμενο-καρτέλας:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.εικονίδιο {
+  display: block;
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+.τίτλος-καρτέλας {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--κείμενο);
+  margin: 0 0 0.35rem;
+}
+.περιγραφή-καρτέλας {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--δευτερεύον);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.απενεργοποιημένη { opacity: 0.5; cursor: default; }
+.σήμανση-μη-διαθέσιμης {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--δευτερεύον);
+  border: 1px solid var(--περίγραμμα);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+
+.μήνυμα-κενού {
+  text-align: center;
+  color: var(--δευτερεύον);
+  padding: 2.5rem 0;
+  margin: 0;
+}
+
+/* ---------- Footer ---------- */
+.υποσέλιδο {
+  text-align: center;
+  padding: 3rem 0 2rem;
+  font-size: 0.875rem;
+  color: var(--δευτερεύον);
+}
+.υποσέλιδο a { color: var(--σύνδεσμος); }
+.υποσέλιδο a:focus-visible,
+.github-σύνδεσμος:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .κεφαλίδα { padding-top: 3.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .καρτέλα, .github-σύνδεσμος, #αναζήτηση { transition: none; }
+  .καρτέλα:not(.απενεργοποιημένη):hover,
+  .καρτέλα:not(.απενεργοποιημένη):focus-within { transform: none; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1 id="heading">Αρχεία HTML</h1>
-  <p class="sub" id="sub">Φόρτωση λίστας…</p>
+<div class="περιέκτης">
+  <header class="κεφαλίδα">
+    <a class="github-σύνδεσμος" href="https://github.com/nick67" target="_blank" rel="noopener noreferrer" aria-label="Προφίλ στο GitHub (ανοίγει σε νέα καρτέλα)">
+      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 2h5v5h-1.5V4.56L7.53 9.53 6.47 8.47l4.97-4.97H9V2ZM3.5 4A1.5 1.5 0 0 0 2 5.5v7A1.5 1.5 0 0 0 3.5 14h7a1.5 1.5 0 0 0 1.5-1.5V9h-1.5v3.5h-7v-7H7V4H3.5Z"/></svg>
+      GitHub
+    </a>
+    <h1>Οι Εφαρμογές μου</h1>
+    <p class="υπότιτλος">Μια συλλογή διαδραστικών εφαρμογών</p>
+  </header>
 
-  <div class="tools">
-    <input id="q" type="search" placeholder="Αναζήτηση…" autocomplete="off" aria-label="Αναζήτηση">
-    <select id="sort" aria-label="Ταξινόμηση">
-      <option value="name">Ταξινόμηση: Όνομα</option>
-      <option value="size">Ταξινόμηση: Μέγεθος</option>
-    </select>
-  </div>
+  <main role="main">
+    <div class="αναζήτηση-περιέκτης" role="search">
+      <input type="search" id="αναζήτηση" placeholder="Αναζήτηση εφαρμογής…" aria-label="Αναζήτηση εφαρμογής" aria-controls="πλέγμα" autocomplete="off" spellcheck="false">
+    </div>
 
-  <div id="list"></div>
-  <div class="count" id="count"></div>
+    <div id="πλέγμα" class="πλέγμα">
+      <article class="καρτέλα" data-id="physims" data-τιτλος="physims" data-περιγραφη="διαδραστικές προσομοιώσεις φυσικής για εκπαίδευση">
+        <a class="περιεχόμενο-καρτέλας" href="https://github.com/nick67/simulations" target="_blank" rel="noopener noreferrer" aria-label="Άνοιγμα PhySims">
+          <span class="εικονίδιο" aria-hidden="true">⚛️</span>
+          <h2 class="τίτλος-καρτέλας">PhySims</h2>
+          <p class="περιγραφή-καρτέλας">Διαδραστικές προσομοιώσεις φυσικής για εκπαίδευση</p>
+        </a>
+      </article>
+    </div>
+
+    <div id="αποτελέσματα" aria-live="polite">
+      <p id="κανένα-αποτέλεσμα" class="μήνυμα-κενού" hidden>Δεν βρέθηκαν αποτελέσματα</p>
+      <p id="πλήθος-αποτελεσμάτων" class="οπτικά-κρυφό"></p>
+    </div>
+  </main>
+
+  <footer class="υποσέλιδο">
+    <p>Τελευταία ενημέρωση: 20/11/2026 · <a href="https://github.com/nick67" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+  </footer>
 </div>
-
 <script>
-/* ---------- Ρυθμίσεις ----------
-   Αν η σελίδα φιλοξενείται στο GitHub Pages (username.github.io/repo/),
-   το owner και το repo βρίσκονται αυτόματα. Συμπλήρωσέ τα μόνο για δοκιμή τοπικά
-   ή αν χρησιμοποιείς δικό σου domain. */
-const CONFIG = { owner: "", repo: "", exclude: ["index.html", "404.html"] };
+(function () {
+  'use strict';
+  var πεδίο = document.getElementById('αναζήτηση');
+  if (!πεδίο) { return; }
+  var μήνυμαΚενού = document.getElementById('κανένα-αποτέλεσμα');
+  var πλήθος = document.getElementById('πλήθος-αποτελεσμάτων');
 
-function detectRepo(){
-  if (CONFIG.owner && CONFIG.repo) return { owner: CONFIG.owner, repo: CONFIG.repo };
-  const host = location.hostname;
-  if (host.endsWith(".github.io")) {
-    const owner = host.split(".")[0];
-    const first = location.pathname.split("/").filter(Boolean)[0];
-    // user site (username.github.io) -> repo = username.github.io
-    const repo = first && !first.includes(".") ? first : owner + ".github.io";
-    return { owner, repo };
+  function κανονικοποίηση(κείμενο) {
+    return (κείμενο || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/ς/g, 'σ');
   }
-  return null;
-}
 
-const $ = id => document.getElementById(id);
-let items = [];
-
-function fmtSize(b){
-  if (b < 1024) return b + " B";
-  if (b < 1048576) return (b/1024).toFixed(1) + " KB";
-  return (b/1048576).toFixed(1) + " MB";
-}
-function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function prettify(p){ return p.split("/").pop().replace(/\.html?$/i,"").replace(/[_-]+/g," "); }
-
-async function load(){
-  const info = detectRepo();
-  if (!info) {
-    $("list").innerHTML = '<div class="msg">Η σελίδα δεν τρέχει στο GitHub Pages. Συμπλήρωσε τα <code>owner</code> και <code>repo</code> στο CONFIG του αρχείου.</div>';
-    $("sub").textContent = "";
-    return;
-  }
-  const key = "filelist:" + info.owner + "/" + info.repo;
-  try {
-    let data = null;
-    try {
-      const c = JSON.parse(sessionStorage.getItem(key) || "null");
-      if (c && Date.now() - c.t < 5*60*1000) data = c.d;
-    } catch(e){}
-    if (!data) {
-      const r = await fetch(`https://api.github.com/repos/${info.owner}/${info.repo}/git/trees/HEAD?recursive=1`,
-                            { headers: { "Accept": "application/vnd.github+json" } });
-      if (!r.ok) throw new Error(r.status === 403 ? "Έχει συμπληρωθεί το όριο αιτημάτων του GitHub. Δοκίμασε ξανά σε λίγο." : "Σφάλμα GitHub (" + r.status + ")");
-      data = await r.json();
-      try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch(e){}
+  var ευρετήριο = Array.prototype.map.call(
+    document.querySelectorAll('#πλέγμα .καρτέλα'),
+    function (καρτέλα) {
+      return {
+        στοιχείο: καρτέλα,
+        κείμενο: κανονικοποίηση(
+          καρτέλα.getAttribute('data-τιτλος') + ' ' + καρτέλα.getAttribute('data-περιγραφη')
+        )
+      };
     }
-    items = (data.tree || [])
-      .filter(f => f.type === "blob" && /\.html?$/i.test(f.path))
-      .filter(f => !CONFIG.exclude.includes(f.path))
-      .filter(f => !f.path.split("/").some(seg => seg.startsWith(".")))
-      .map(f => ({ path: f.path, size: f.size || 0, title: prettify(f.path) }));
+  );
 
-    $("heading").textContent = info.repo.replace(/[-_]+/g, " ");
-    $("sub").textContent = "Επίλεξε ένα αρχείο για να το ανοίξεις.";
-    render();
-    loadTitles();
-  } catch (e) {
-    $("sub").textContent = "";
-    $("list").innerHTML = '<div class="msg">' + esc(e.message || "Δεν ήταν δυνατή η φόρτωση της λίστας.") + '</div>';
-  }
-}
-
-/* Διαβάζει το <title> κάθε αρχείου (ίδιο origin, δεν μετρά στο όριο του API) */
-async function loadTitles(){
-  await Promise.all(items.map(async it => {
-    try {
-      const r = await fetch(encodeURI(it.path));
-      if (!r.ok) return;
-      const t = (await r.text()).match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-      if (t && t[1].trim()) { it.title = t[1].trim().replace(/\s+/g," "); }
-    } catch(e){}
-  }));
-  render();
-}
-
-function render(){
-  const q = $("q").value.trim().toLowerCase();
-  const sort = $("sort").value;
-  let rows = items.filter(i => !q || i.title.toLowerCase().includes(q) || i.path.toLowerCase().includes(q));
-  rows.sort((a,b) => sort === "size" ? b.size - a.size : a.title.localeCompare(b.title, "el"));
-
-  if (!rows.length) {
-    $("list").innerHTML = '<div class="msg">' + (items.length ? "Δεν βρέθηκαν αποτελέσματα." : "Δεν υπάρχουν ακόμα αρχεία HTML.") + '</div>';
-    $("count").textContent = "";
-    return;
-  }
-  const groups = {};
-  rows.forEach(r => {
-    const i = r.path.lastIndexOf("/");
-    (groups[i < 0 ? "" : r.path.slice(0, i)] ||= []).push(r);
+  πεδίο.addEventListener('input', function () {
+    var ερώτημα = κανονικοποίηση(πεδίο.value.trim());
+    var ορατές = 0;
+    for (var i = 0; i < ευρετήριο.length; i++) {
+      var ταιριάζει = ερώτημα === '' || ευρετήριο[i].κείμενο.indexOf(ερώτημα) !== -1;
+      ευρετήριο[i].στοιχείο.hidden = !ταιριάζει;
+      if (ταιριάζει) { ορατές++; }
+    }
+    μήνυμαΚενού.hidden = ορατές !== 0;
+    πλήθος.textContent = (ερώτημα === '' || ορατές === 0)
+      ? ''
+      : (ορατές === 1 ? 'Βρέθηκε 1 εφαρμογή' : 'Βρέθηκαν ' + ορατές + ' εφαρμογές');
   });
-  const names = Object.keys(groups).sort((a,b) => a.localeCompare(b, "el"));
-  $("list").innerHTML = names.map(g =>
-    (g ? '<div class="folder">' + esc(g) + '</div>' : (names.length > 1 ? '<div class="folder">Κύριος φάκελος</div>' : '')) +
-    '<ul>' + groups[g].map(r =>
-      '<li><a href="' + esc(encodeURI(r.path)) + '"><span class="name"><span class="title">' + esc(r.title) +
-      '</span><span class="file">' + esc(r.path.split("/").pop()) + '</span></span><span class="size">' + fmtSize(r.size) + '</span></a></li>'
-    ).join("") + '</ul>'
-  ).join("");
-  $("count").textContent = rows.length + (rows.length === 1 ? " αρχείο" : " αρχεία");
-}
-
-$("q").addEventListener("input", render);
-$("sort").addEventListener("change", render);
-load();
+})();
 </script>
 </body>
 </html>
